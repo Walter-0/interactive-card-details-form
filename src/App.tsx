@@ -1,49 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+
 import cardLogo from "./images/card-logo.svg";
 import bgMainMobile from "./images/bg-main-mobile.png";
 import bgMainDesktop from "./images/bg-main-desktop.png";
 import iconComplete from "./images/icon-complete.svg";
 
-const isEmpty = (str: string) => {
-  return str === "";
-};
-
-const isCardNumberValid = (str: string) => {
-  // check if string is a 16 digit number
-  return /^\d+$/.test(str) && str.length === 16;
-};
-
-const isMonthValid = (str: string) => {
-  // check if string is a number between 1 and 12
-  return (
-    /^\d+$/.test(str) &&
-    str.length === 2 &&
-    parseInt(str) >= 1 &&
-    parseInt(str) <= 12
-  );
-};
-
-const isYearValid = (str: string) => {
-  // check if string is a number greater than 23
-  return /^\d+$/.test(str) && str.length === 2 && parseInt(str) >= 23;
-};
-
-const isCvcValid = (str: string) => {
-  // check if string is a number
-  return /^\d+$/.test(str) && str.length === 3;
-};
+interface IFormInputs {
+  cardholderName: string;
+  cardnumber: string;
+  month: string;
+  year: string;
+  cvc: string;
+}
 
 function App() {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitSuccessful },
+  } = useForm<IFormInputs>();
+
   const [cardNumber, setCardNumber] = useState("");
-  const [cardNumberError, setCardNumberError] = useState("");
   const [cardholderName, setCardholderName] = useState("");
-  const [cardholderNameError, setCardholderNameError] = useState("");
   const [month, setMonth] = useState("");
-  const [monthError, setMonthError] = useState("");
   const [year, setYear] = useState("");
-  const [yearError, setYearError] = useState("");
   const [cvc, setCvc] = useState("");
-  const [cvcError, setCvcError] = useState("");
 
   const [isCompleted, setIsCompleted] = useState(false);
 
@@ -67,56 +50,13 @@ function App() {
     setCvc(e.target.value);
   };
 
-  // Validation
-  const validateForm = () => {
-    isEmpty(cardholderName)
-      ? setCardholderNameError("Can't be blank")
-      : setCardholderNameError("");
-
-    isEmpty(cardNumber)
-      ? setCardNumberError("Can't be blank")
-      : !isCardNumberValid(cardNumber)
-      ? setCardNumberError("Wrong format, numbers only")
-      : setCardNumberError("");
-
-    isEmpty(month)
-      ? setMonthError("Can't be blank")
-      : !isMonthValid(month)
-      ? setMonthError("Invalid month")
-      : setMonthError("");
-
-    isEmpty(year)
-      ? setYearError("Can't be blank")
-      : !isYearValid(year)
-      ? setYearError("Invalid year")
-      : setYearError("");
-
-    isEmpty(cvc)
-      ? setCvcError("Can't be blank")
-      : !isCvcValid(cvc)
-      ? setCvcError("Invalid CVC")
-      : setCvcError("");
+  const onSubmit = (data: IFormInputs) => {
+    setIsCompleted(true);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    validateForm();
-    if (
-      [
-        cardholderNameError,
-        cardNumberError,
-        monthError,
-        yearError,
-        cvcError,
-      ].every((err) => err === "")
-    ) {
-      console.log("Form submitted");
-
-      setIsCompleted(true);
-      console.log(isCompleted);
-    }
-  };
+  useEffect(() => {
+    reset();
+  }, [isSubmitSuccessful]);
 
   return (
     <div className="App relative lg:flex lg:flex-row">
@@ -164,28 +104,27 @@ function App() {
         {!isCompleted ? (
           <form
             className="flex flex-col space-y-6 lg:w-[400px]"
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmit(onSubmit)}
           >
             <div>
               <label
-                htmlFor="cardholder"
+                htmlFor="cardholderName"
                 className="mb-2 block text-xs uppercase tracking-widest lg:text-sm"
               >
                 Cardholder name
               </label>
               <input
+                {...register("cardholderName", { required: "Can't be blank" })}
                 type="text"
-                name="cardholder"
-                id="cardholder"
+                name="cardholderName"
+                id="cardholderName"
                 placeholder="Jane Appleseed"
                 className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                 onChange={(e) => handleCardholderChange(e)}
               />
-              {cardholderNameError && (
-                <p className="text-xs text-red lg:text-sm">
-                  {cardholderNameError}
-                </p>
-              )}
+              <p className="text-xs text-red lg:text-sm">
+                {errors.cardholderName?.message}
+              </p>
             </div>
 
             <div>
@@ -196,6 +135,12 @@ function App() {
                 Card Number
               </label>
               <input
+                {...register("cardnumber", {
+                  required: "Can't be blank",
+                  maxLength: { value: 16, message: "Must be 16 digits" },
+                  minLength: { value: 16, message: "Must be 16 digits" },
+                  pattern: { value: /^\d+$/, message: "Must be a number" },
+                })}
                 type="text"
                 name="cardnumber"
                 id="cardnumber"
@@ -204,9 +149,9 @@ function App() {
                 className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                 onChange={(e) => handleCardNumberChange(e)}
               />
-              {cardNumberError && (
-                <p className="text-xs text-red lg:text-sm">{cardNumberError}</p>
-              )}
+              <p className="text-xs text-red lg:text-sm">
+                {errors.cardnumber?.message}
+              </p>
             </div>
 
             <div className="flex flex-row space-x-4">
@@ -218,6 +163,15 @@ function App() {
                 <div className="flex flex-row space-x-2">
                   <div className="w-1/2">
                     <input
+                      {...register("month", {
+                        required: "Can't be blank",
+                        maxLength: { value: 2, message: "Must be 2 digits" },
+                        minLength: { value: 2, message: "Must be 2 digits" },
+                        pattern: {
+                          value: /^\d+$/,
+                          message: "Must be a number",
+                        },
+                      })}
                       type="text"
                       name="month"
                       placeholder="MM"
@@ -225,15 +179,22 @@ function App() {
                       className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                       onChange={(e) => handleMonthChange(e)}
                     />
-                    {monthError && (
-                      <p className="text-xs text-red lg:text-sm">
-                        {monthError}
-                      </p>
-                    )}
+                    <p className="text-xs text-red lg:text-sm">
+                      {errors.month?.message}
+                    </p>
                   </div>
 
                   <div className="w-1/2">
                     <input
+                      {...register("year", {
+                        required: "Can't be blank",
+                        maxLength: { value: 2, message: "Must be 2 digits" },
+                        minLength: { value: 2, message: "Must be 2 digits" },
+                        pattern: {
+                          value: /^\d+$/,
+                          message: "Must be a number",
+                        },
+                      })}
                       type="text"
                       name="year"
                       placeholder="YY"
@@ -241,9 +202,9 @@ function App() {
                       className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                       onChange={(e) => handleYearChange(e)}
                     />
-                    {yearError && (
-                      <p className="text-xs text-red lg:text-sm">{yearError}</p>
-                    )}
+                    <p className="text-xs text-red lg:text-sm">
+                      {errors.year?.message}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -256,6 +217,12 @@ function App() {
                   CVC
                 </label>
                 <input
+                  {...register("cvc", {
+                    required: "Can't be blank",
+                    maxLength: { value: 3, message: "Must be 3 digits" },
+                    minLength: { value: 3, message: "Must be 3 digits" },
+                    pattern: { value: /^\d+$/, message: "Must be a number" },
+                  })}
                   type="text"
                   name="cvc"
                   id="cvc"
@@ -264,9 +231,9 @@ function App() {
                   className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                   onChange={(e) => handleCvcChange(e)}
                 />
-                {cvcError && (
-                  <p className="text-xs text-red lg:text-sm">{cvcError}</p>
-                )}
+                <p className="text-xs text-red lg:text-sm">
+                  {errors.cvc?.message}
+                </p>
               </div>
             </div>
 
