@@ -56,7 +56,7 @@ function App() {
 
   useEffect(() => {
     reset();
-  }, [isSubmitSuccessful]);
+  }, [isSubmitSuccessful, reset]);
 
   return (
     <div className="App relative lg:flex lg:flex-row">
