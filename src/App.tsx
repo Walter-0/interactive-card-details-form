@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 
-import cardLogo from "./images/card-logo.svg";
 import bgMainMobile from "./images/bg-main-mobile.png";
 import bgMainDesktop from "./images/bg-main-desktop.png";
 import iconComplete from "./images/icon-complete.svg";
+import cardLogo from "./images/card-logo.svg";
+import amexLogo from "./images/amex-logo.svg";
+import visaLogo from "./images/visa-logo.svg";
+import mastercardLogo from "./images/mastercard-logo.svg";
+import discoverLogo from "./images/discover-logo.svg";
+
+// add types to this object
+const logos: { [key: string]: string } = {
+  blank: cardLogo,
+  amex: amexLogo,
+  visa: visaLogo,
+  mastercard: mastercardLogo,
+  discover: discoverLogo,
+};
 
 interface IFormInputs {
   cardholderName: string;
@@ -23,6 +36,7 @@ function App() {
   } = useForm<IFormInputs>();
 
   const [cardNumber, setCardNumber] = useState("");
+  const [cardNetwork, setCardNetwork] = useState("blank"); // ["amex", "visa", "mastercard", "discover"]
   const [cardholderName, setCardholderName] = useState("");
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
@@ -32,6 +46,24 @@ function App() {
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCardNumber(e.target.value);
+
+    switch (e.target.value[0]) {
+      case "3":
+        setCardNetwork("amex");
+        break;
+      case "4":
+        setCardNetwork("visa");
+        break;
+      case "5":
+        setCardNetwork("mastercard");
+        break;
+      case "6":
+        setCardNetwork("discover");
+        break;
+      default:
+        setCardNetwork("blank");
+        break;
+    }
   };
 
   const handleCardholderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +104,7 @@ function App() {
       />
 
       <div className="absolute left-4 top-32 z-10 flex h-[155px] w-[285px] flex-col justify-between bg-card-front bg-cover p-5 lg:left-44 lg:top-44 lg:h-[245px] lg:w-[447px] lg:p-[30px]">
-        <img src={cardLogo} className="w-14" alt="card logo" />
+        <img src={logos[cardNetwork]} alt="card logo" className="w-14" />
 
         <div className="flex flex-col space-y-3 lg:space-y-6">
           <div className="text-lg tracking-widest text-white lg:text-3xl">
@@ -137,15 +169,21 @@ function App() {
               <input
                 {...register("cardnumber", {
                   required: "Can't be blank",
-                  maxLength: { value: 16, message: "Must be 16 digits" },
-                  minLength: { value: 16, message: "Must be 16 digits" },
+                  maxLength:
+                    cardNetwork === "amex"
+                      ? { value: 15, message: "Must be 15 digits" }
+                      : { value: 16, message: "Must be 16 digits" },
+                  minLength:
+                    cardNetwork === "amex"
+                      ? { value: 15, message: "Must be 15 digits" }
+                      : { value: 16, message: "Must be 16 digits" },
                   pattern: { value: /^\d+$/, message: "Must be a number" },
                 })}
                 type="text"
                 name="cardnumber"
                 id="cardnumber"
                 placeholder="0000 0000 0000 0000"
-                maxLength={16}
+                maxLength={cardNetwork === "amex" ? 15 : 16}
                 className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                 onChange={(e) => handleCardNumberChange(e)}
               />
@@ -219,15 +257,21 @@ function App() {
                 <input
                   {...register("cvc", {
                     required: "Can't be blank",
-                    maxLength: { value: 3, message: "Must be 3 digits" },
-                    minLength: { value: 3, message: "Must be 3 digits" },
+                    maxLength:
+                      cardNetwork === "amex"
+                        ? { value: 4, message: "Must be 4 digits" }
+                        : { value: 3, message: "Must be 3 digits" },
+                    minLength:
+                      cardNetwork === "amex"
+                        ? { value: 4, message: "Must be 4 digits" }
+                        : { value: 3, message: "Must be 3 digits" },
                     pattern: { value: /^\d+$/, message: "Must be a number" },
                   })}
                   type="text"
                   name="cvc"
                   id="cvc"
                   placeholder="000"
-                  maxLength={3}
+                  maxLength={cardNetwork === "amex" ? 4 : 3}
                   className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                   onChange={(e) => handleCvcChange(e)}
                 />
