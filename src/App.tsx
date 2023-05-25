@@ -27,6 +27,24 @@ interface IFormInputs {
   cvc: string;
 }
 
+const formatCardNumber = (cardNumber: string, cardNetwork: string) => {
+  let formattedCardNumber = cardNumber;
+
+  if (cardNetwork === "amex") {
+    formattedCardNumber = `${cardNumber.slice(0, 4)} ${cardNumber.slice(
+      4,
+      10
+    )} ${cardNumber.slice(10)}`;
+  } else {
+    formattedCardNumber = `${cardNumber.slice(0, 4)} ${cardNumber.slice(
+      4,
+      8
+    )} ${cardNumber.slice(8, 12)} ${cardNumber.slice(12)}`;
+  }
+
+  return formattedCardNumber;
+};
+
 function App() {
   const {
     register,
@@ -108,13 +126,7 @@ function App() {
 
         <div className="flex flex-col space-y-3 lg:space-y-6">
           <div className="text-lg tracking-widest text-white lg:text-3xl">
-            <span>{cardNumber.slice(0, 4)}</span>
-            &nbsp;
-            <span>{cardNumber.slice(4, 8)}</span>
-            &nbsp;
-            <span>{cardNumber.slice(8, 12)}</span>
-            &nbsp;
-            <span>{cardNumber.slice(12)}</span>
+            <span>{formatCardNumber(cardNumber, cardNetwork)}</span>
           </div>
 
           <div className="flex justify-between text-xs tracking-wider text-white lg:text-lg">
@@ -270,7 +282,7 @@ function App() {
                   type="text"
                   name="cvc"
                   id="cvc"
-                  placeholder="000"
+                  placeholder={cardNetwork === "amex" ? "0000" : "000"}
                   maxLength={cardNetwork === "amex" ? 4 : 3}
                   className="w-full rounded-md border border-gray-300 p-3 invalid:border-red focus:outline-none focus:ring-2 focus:ring-brilliant-blue"
                   onChange={(e) => handleCvcChange(e)}
